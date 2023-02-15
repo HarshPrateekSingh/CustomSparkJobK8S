@@ -1,0 +1,3 @@
+docker build -t harshprateeksingh/spark-kubernetes:latest .
+#docker tag spark_custom harshprateeksingh/spark-kubernetes:latest
+docker push harshprateeksingh/spark-kubernetes:latest
