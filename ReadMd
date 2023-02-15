@@ -1,1 +1,41 @@
 sbt package
+----------------------------------------------------------------------
+copy jar from Spark_K8s/target to Spark_K8s/Docker_K8sCustom_Spark_k8s.jar location
+
+docker build -t harshprateeksingh/spark-kubernetes:latest .
+
+docker push harshprateeksingh/spark-kubernetes:latest
+
+----------------------------------------------------------------------
+login to GCP, create K8S cluster , go to cloud shell connect , upload spark3 here from -
+https://dlcdn.apache.org/spark/spark-3.3.1/spark-3.3.1-bin-hadoop3.tgz
+
+tar -xvzf spark-3.3.1-bin-hadoop3.tgz
+
+kubectl create -f rbac.yaml
+
+export POD_NAME=spark-examples-pod
+export SPARK_IMAGE=harshprateeksingh/spark-kubernetes:latest
+
+./bin/spark-submit \
+  --master k8s://https://34.68.120.208 \
+  --deploy-mode cluster \
+  --name $POD_NAME \
+  --class com.example.spark.k8.SparkPiCustom \
+  --conf spark.kubernetes.driver.request.cores=400m \
+  --conf spark.kubernetes.executor.request.cores=100m \
+  --conf spark.kubernetes.container.image=$SPARK_IMAGE \
+  --conf spark.kubernetes.driver.pod.name=$POD_NAME \
+  --conf spark.kubernetes.namespace=spark-demo \
+  --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark \
+  --verbose \
+  local:///opt/spark/work-dir/Custom_Spark_k8s.jar 10
+
+  ------------------------------------------------------------------------------------------
+  kubectl -n=spark-demo logs -f spark-examples-pod
+
+  kubectl port-forward spark-pi-b7563d864def22df-driver 4040:4040
+
+  docker run -it harshprateeksingh/spark-kubernetes:latest /bin/bash
+
+  kubectl delete pod -n spark-demo spark-examples-pod
